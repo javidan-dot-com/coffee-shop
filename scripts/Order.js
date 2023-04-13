@@ -12,6 +12,21 @@ const Order = {
         }
         Order.render();
     },
+    load: () => {
+        if (localStorage.getItem("cart")) {
+            try {
+                Order.cart = JSON.parse(localStorage.getItem("cart"));
+                Order.render();
+            } catch (e) {
+                console.log("Error parsing cart from localStorage");
+                localStorage.removeItem("cart");
+            }
+        }
+        
+    },
+    save: () => {
+        localStorage.setItem("cart", JSON.stringify(Order.cart));
+    },
     remove: (id) => {
         Order.cart = Order.cart.filter(prodInCart => prodInCart.product.id!=id);
         Order.render();
@@ -23,6 +38,7 @@ const Order = {
         Order.render();
     },
     render: () => {
+        Order.save();
         if (Order.cart.length==0) {
             document.querySelector("#order").innerHTML = `
                 <p class="empty">Your order is empty</p>
@@ -60,5 +76,6 @@ const Order = {
         }
     }
 }
+Order.load();
 window.Order = Order; // make it "public"
 export default Order;
