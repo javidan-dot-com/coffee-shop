@@ -12,20 +12,31 @@ const Order = {
         }
         Order.render();
     },
-    load: () => {
-        if (localStorage.getItem("cart")) {
+    // Opening DB in the browser
+    openDB: async () => {
+    return await idb.openDB("coffee-shop-storage", 1, {
+        async upgrade(db) {
+            await db.createObjectStore("order");
+        }
+    })
+    },
+    // Loading the cart from the DB
+    load: async () => {
+        const db = await Order.openDB();
+        const cartString = await db.get("order", "cart");
+        if (cartString) {
             try {
-                Order.cart = JSON.parse(localStorage.getItem("cart"));
-                Order.render();
+                Order.cart = JSON.parse(cartString);  
             } catch (e) {
-                console.log("Error parsing cart from localStorage");
-                localStorage.removeItem("cart");
+                console.error("Data in Storage is corrupted");
             }
         }
-        
+        Order.render();
     },
-    save: () => {
-        localStorage.setItem("cart", JSON.stringify(Order.cart));
+    // Saving the cart to the DB
+    save: async () => {
+        const db = await Order.openDB();
+        await db.put("order", JSON.stringify(Order.cart), "cart")
     },
     remove: (id) => {
         Order.cart = Order.cart.filter(prodInCart => prodInCart.product.id!=id);
@@ -76,6 +87,5 @@ const Order = {
         }
     }
 }
-Order.load();
 window.Order = Order; // make it "public"
 export default Order;
